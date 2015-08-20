@@ -22,7 +22,7 @@ $epoch = \postmatic\epoch\options::get();
 <script type="text/html" id="main-ui-template">
 	<?php
 		// pull in the rest of the admin
-		include EPOCH_PATH . 'includes/templates/main-ui.php';
+		include EPOCH_PATH . 'includes/templates/main-processorUi.php';
 	?>	
 </script>
 

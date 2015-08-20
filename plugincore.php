@@ -61,6 +61,7 @@ function epoch_activate() {
 		if ( file_exists( EPOCH_PATH . 'vendor/autoload.php' ) ){
 			require_once( EPOCH_PATH . 'vendor/autoload.php' );
 			epoch_fix_rewrites();
+			epoch_write_all();
 		}
 
 	}

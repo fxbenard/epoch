@@ -96,6 +96,7 @@ class core {
 		add_action( 'init', function() {
 			if( ! isset( $_REQUEST[ vars::$nonce_field ] ) && EPOCH_VER != get_option( 'epoch_ver' ) ) {
 				epoch_fix_rewrites();
+				epoch_write_all();
 			}
 		});
 

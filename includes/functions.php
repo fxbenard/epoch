@@ -87,3 +87,22 @@ function epoch_fix_rewrites() {
 	$wp_rewrite->flush_rules();
 	update_option( 'epoch_ver', EPOCH_VER );
 }
+
+/**
+ *
+ */
+function epoch_write_all() {
+	if ( ! EPOCH_ALT_COUNT_CHECK_MODE ) {
+		return;
+	}
+
+	global $wpdb;
+	$query = $wpdb->prepare( 'SELECT `ID` FROM %1s WHERE `post_type` == "post"', $wpdb->posts );
+	$results = $wpdb->get_results( $query );
+	if ( ! empty( $results ) ) {
+		foreach( $results as $result ) {
+			\postmatic\epoch\front\api_helper::write_comment_count( $result[ 'ID' ] );
+		}
+
+	}
+}

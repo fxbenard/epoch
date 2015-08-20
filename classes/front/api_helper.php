@@ -366,26 +366,77 @@ class api_helper {
 
 	}
 
+	public static function write_comment_count( $post_id, $comment_count = null ) {
+		if ( ! EPOCH_ALT_COUNT_CHECK_MODE ){
+			return false;
+
+		}
+
+		if ( is_null( $comment_count ) ) {
+			$comment_count = get_comment_count( $post_id );
+		}
+		if ( current_user_can( 'manage_plugins' ) ) {
+			return self::write_comment_count_as_admin( $post_id, $comment_count );
+		}else{
+			return self::write_comment_count_not_admin( $post_id, $comment_count );
+		}
+
+	}
+
 	/**
 	 * If possible, write comment count to a text file.
 	 *
 	 * @since 1.0.2
+	 *
+	 * @access protected
+	 *
+	 * @param int $post_id
+	 * @param int $comment_count
+	 *
+	 * @return array
+	 */
+	protected static function write_comment_count_not_admin( $post_id, $comment_count ) {
+		$filename = api_paths::comment_count_alt_check_url( $post_id );
+		$path = api_paths::comment_count_dir();
+
+
+		if ( ! file_exists( $path  ) ) {
+			return false;
+
+		}
+
+		$fp = fopen( $path, 'w' );
+		if ( ! $fp ) {
+			$written = file_put_contents( $filename, absint( $comment_count )  );
+			if ( ! $fp && ! $written ) {
+				return false;
+
+			}else{
+				return true;
+
+			}
+
+		}
+
+
+		return false;
+
+	}
+
+	/**
+	 * If possible, write comment count to a text file.
+	 *
+	 * @since 1.0.2
+	 *
+	 * @access protected
 	 *
 	 * @param int $post_id
 	 * @param null $comment_count
 	 *
 	 * @return array
 	 */
-	public static function write_comment_count( $post_id, $comment_count = null ) {
-		if ( ! EPOCH_ALT_COUNT_CHECK_MODE ){
-			return array(
-				'code' => 501,
-				'message' => __( 'File system comment count checks not enabled.', 'epoch' )
-			);
+	protected static function write_comment_count_as_admin( $post_id, $comment_count ) {
 
-		}
-
-		$fail = false;
 
 		$url = wp_nonce_url('plugins.php');
 		if ( is_null( $comment_count ) ) {
@@ -394,15 +445,13 @@ class api_helper {
 
 		$return = array( 'code' => 500 );
 		if (false === ($creds = request_filesystem_credentials( $url, '', false, false ) ) ) {
-			$return[ 'message' ] = __( 'Could not use WordPress file system.', 'epoch' );
-			return $return;
+			return false;
 
 		}
 
 
 		if ( ! WP_Filesystem($creds) ) {
-			$return[ 'message' ] = __( 'Could not access WordPress file system.', 'epoch' );
-			return $return;
+			return false;
 
 		}
 
@@ -413,8 +462,7 @@ class api_helper {
 		}
 
 		if ( ! file_exists( $dir ) ) {
-			$return[ 'message' ] = __( 'Could not create directory.', 'epoch' );
-			return $return;
+			return false;
 
 		}
 
@@ -424,16 +472,13 @@ class api_helper {
 		// by this point, the $wp_filesystem global should be working, so let's use it to create a file
 		global $wp_filesystem;
 		if ( ! $wp_filesystem->put_contents( $filename, absint( $comment_count ), FS_CHMOD_FILE) ) {
-			$return[ 'message' ] = __( 'Could not write file.', 'epoch' );
+			return false;
 		}
 		else{
-			$return = array(
-				'code' => 200,
-				'message' => $comment_count
-			);
+			return true;
 		}
 
-		return $return;
+
 
 	}
 
